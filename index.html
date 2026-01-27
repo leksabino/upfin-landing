@@ -157,54 +157,46 @@
 
   </div>
 
-  <script>
-    const API_URL =
-      location.hostname === "localhost"
-        ? "http://localhost:8080"
-        : "upfin-backend-production.up.railway.app";
+ <script>
+  const API_URL =
+    location.hostname === "localhost"
+      ? "http://localhost:8082"
+      : "upfin-backend-production.up.railway.app";
 
-    const form = document.getElementById("lead-form");
-    const mensagem = document.getElementById("mensagem");
+  const form = document.getElementById("lead-form");
+  const mensagem = document.getElementById("mensagem");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const nome = document.getElementById("nome").value.trim();
-      const email = document.getElementById("email").value.trim();
+    const nome = document.getElementById("nome").value.trim();
+    const email = document.getElementById("email").value.trim();
 
-      if (!nome || !email) {
-        mensagem.textContent = "❌ Preencha seu nome e e-mail para continuar.";
+    try {
+      const res = await fetch(`${API_URL}/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, email })
+      });
+
+      if (res.status === 409) {
+        mensagem.textContent = "ℹ️ E-mail já cadastrado.";
         mensagem.className = "mensagem erro";
         return;
       }
 
-      try {
-        const res = await fetch(`${API_URL}/leads`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nome, email })
-        });
+      if (!res.ok) throw new Error();
 
-        if (res.status === 409) {
-          mensagem.textContent = "ℹ️ Este e-mail já está cadastrado na lista.";
-          mensagem.className = "mensagem erro";
-          return;
-        }
+      mensagem.textContent = "✅ Cadastro realizado com sucesso!";
+      mensagem.className = "mensagem sucesso";
+      form.reset();
 
-        if (!res.ok) throw new Error();
-
-        mensagem.textContent =
-          "✅ Cadastro realizado! Em breve entraremos em contato.";
-        mensagem.className = "mensagem sucesso";
-        form.reset();
-
-      } catch (err) {
-        mensagem.textContent =
-          "❌ Não foi possível enviar agora. Tente novamente em instantes.";
-        mensagem.className = "mensagem erro";
-      }
-    });
-  </script>
+    } catch {
+      mensagem.textContent = "❌ Erro ao enviar. Backend fora do ar.";
+      mensagem.className = "mensagem erro";
+    }
+  });
+</script>
 </body>
 
 </html>

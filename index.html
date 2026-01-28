@@ -152,52 +152,52 @@
   </div>
 
   <script>
-    const API_URL =
-      location.hostname === "localhost"
-        ? "http://localhost:8082"
-        : "https://upfin-backend-production.up.railway.app";
+  const API_URL =
+    location.hostname === "localhost"
+      ? "http://localhost:8082"
+      : "https://upfin-backend-production.up.railway.app";
 
-    const form = document.getElementById("lead-form");
-    const mensagem = document.getElementById("mensagem");
+  const form = document.getElementById("lead-form");
+  const mensagem = document.getElementById("mensagem");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const nome = document.getElementById("nome").value.trim();
-      const email = document.getElementById("email").value.trim();
+    const nome = document.getElementById("nome").value.trim();
+    const email = document.getElementById("email").value.trim();
 
-      mensagem.textContent = "⏳ Enviando...";
-      mensagem.className = "mensagem";
+    mensagem.textContent = "⏳ Enviando...";
+    mensagem.className = "mensagem";
 
-      try {
-        const res = await fetch(`${API_URL}/leads`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: nome,
-            email: email
-          })
-        });
+    try {
+      const res = await fetch(`${API_URL}/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: nome,   // 👈 AQUI ESTÁ A CORREÇÃO
+          email: email
+        })
+      });
 
-        if (res.status === 409) {
-          mensagem.textContent = "ℹ️ E-mail já cadastrado.";
-          mensagem.className = "mensagem erro";
-          return;
-        }
-
-        if (!res.ok) throw new Error();
-
-        mensagem.textContent = "✅ Cadastro realizado com sucesso!";
-        mensagem.className = "mensagem sucesso";
-        form.reset();
-
-      } catch (err) {
-        console.error(err);
-        mensagem.textContent = "❌ Erro ao enviar. Servidor fora do ar.";
+      if (res.status === 409) {
+        mensagem.textContent = "ℹ️ E-mail já cadastrado.";
         mensagem.className = "mensagem erro";
+        return;
       }
-    });
-  </script>
+
+      if (!res.ok) throw new Error();
+
+      mensagem.textContent = "✅ Cadastro realizado com sucesso!";
+      mensagem.className = "mensagem sucesso";
+      form.reset();
+
+    } catch (err) {
+      console.error(err);
+      mensagem.textContent = "❌ Erro ao enviar. Servidor fora do ar.";
+      mensagem.className = "mensagem erro";
+    }
+  });
+</script>
 </body>
 
 </html>

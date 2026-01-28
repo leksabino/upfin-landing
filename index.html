@@ -31,7 +31,6 @@
       text-align: center;
     }
 
-    /* LOGO */
     .logo {
       display: flex;
       justify-content: center;
@@ -102,7 +101,6 @@
       color: #ef4444;
     }
 
-    /* FOOTER INSTITUCIONAL */
     .footer {
       margin-top: 40px;
       padding-top: 24px;
@@ -124,12 +122,10 @@
 <body>
   <div class="container">
 
-    <!-- LOGO -->
     <div class="logo">
       <img src="assets/logo-upfin.png" alt="Upfin">
     </div>
 
-    <!-- TEXTO PRINCIPAL -->
     <h1>
       Quando os <strong>bancos</strong> dizem não,<br>
       alguém precisa dizer <strong>sim</strong>.
@@ -140,7 +136,6 @@
       e evolua seu limite com uso responsável.
     </p>
 
-    <!-- FORM -->
     <form id="lead-form">
       <input id="nome" type="text" placeholder="Seu nome completo" required />
       <input id="email" type="email" placeholder="Seu melhor e-mail" required />
@@ -149,7 +144,6 @@
 
     <p id="mensagem" class="mensagem"></p>
 
-    <!-- FOOTER -->
     <footer class="footer">
       <p>Pré-lançamento • Acesso controlado</p>
       <span>© 2026 Upfin. Todos os direitos reservados.</span>
@@ -157,46 +151,53 @@
 
   </div>
 
- <script>
-  const API_URL =
-    location.hostname === "localhost"
-      ? "http://localhost:8082"
-      : "upfin-backend-production.up.railway.app";
+  <script>
+    const API_URL =
+      location.hostname === "localhost"
+        ? "http://localhost:8082"
+        : "https://upfin-backend-production.up.railway.app";
 
-  const form = document.getElementById("lead-form");
-  const mensagem = document.getElementById("mensagem");
+    const form = document.getElementById("lead-form");
+    const mensagem = document.getElementById("mensagem");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    const nome = document.getElementById("nome").value.trim();
-    const email = document.getElementById("email").value.trim();
+      const nome = document.getElementById("nome").value.trim();
+      const email = document.getElementById("email").value.trim();
 
-    try {
-      const res = await fetch(`${API_URL}/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email })
-      });
+      mensagem.textContent = "⏳ Enviando...";
+      mensagem.className = "mensagem";
 
-      if (res.status === 409) {
-        mensagem.textContent = "ℹ️ E-mail já cadastrado.";
+      try {
+        const res = await fetch(`${API_URL}/leads`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: nome,
+            email: email
+          })
+        });
+
+        if (res.status === 409) {
+          mensagem.textContent = "ℹ️ E-mail já cadastrado.";
+          mensagem.className = "mensagem erro";
+          return;
+        }
+
+        if (!res.ok) throw new Error();
+
+        mensagem.textContent = "✅ Cadastro realizado com sucesso!";
+        mensagem.className = "mensagem sucesso";
+        form.reset();
+
+      } catch (err) {
+        console.error(err);
+        mensagem.textContent = "❌ Erro ao enviar. Servidor fora do ar.";
         mensagem.className = "mensagem erro";
-        return;
       }
-
-      if (!res.ok) throw new Error();
-
-      mensagem.textContent = "✅ Cadastro realizado com sucesso!";
-      mensagem.className = "mensagem sucesso";
-      form.reset();
-
-    } catch {
-      mensagem.textContent = "❌ Erro ao enviar. Backend fora do ar.";
-      mensagem.className = "mensagem erro";
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 
 </html>

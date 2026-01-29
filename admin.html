@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin • Upfin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #222;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>📋 Leads cadastrados</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>E-mail</th>
+      </tr>
+    </thead>
+    <tbody id="leads"></tbody>
+  </table>
+
+  <script>
+  const API_URL =
+    location.hostname === "localhost"
+      ? "http://localhost:8080"
+      : "https://upfin-backend-production.up.railway.app";
+
+  const token = prompt("🔐 Token admin:");
+
+  if (!token) {
+    document.body.innerHTML = "<h2>⛔ Acesso cancelado</h2>";
+    throw new Error("Sem token");
+  }
+
+  fetch(`${API_URL}/leads`, {
+    headers: {
+      "X-ADMIN-TOKEN": token
+    }
+  })
+    .then(res => {
+      if (res.status === 401) {
+        document.body.innerHTML = "<h2>⛔ Não autorizado</h2>";
+        throw new Error("Unauthorized");
+      }
+      return res.json();
+    })
+    .then(data => {
+      const tbody = document.getElementById("leads");
+
+      data.forEach(lead => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${lead.id}</td>
+          <td>${lead.nome ?? "-"}</td>
+          <td>${lead.email}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(() => {
+      alert("Erro ao carregar leads");
+    });
+</script>
+</body>
+</html>

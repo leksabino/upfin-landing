@@ -6,74 +6,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
     body {
       background: #000;
       color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
       padding: 24px;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    p {
+      color: #9ca3af;
       margin-bottom: 24px;
     }
 
-    h1 {
-      font-size: 22px;
-    }
-
-    button {
-      background: #111827;
-      color: #93c5fd;
+    .card {
+      background: #0b1220;
       border: 1px solid #1f2937;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: inline-block;
     }
 
-    button:hover {
-      background: #1f2937;
+    .card span {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .card strong {
+      font-size: 32px;
+      display: block;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
     }
 
     th, td {
-      border-bottom: 1px solid #222;
       padding: 12px;
+      border-bottom: 1px solid #222;
       text-align: left;
-      font-size: 14px;
     }
 
     th {
       color: #9ca3af;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-
-    .erro {
-      color: #ef4444;
-      margin-top: 24px;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>📋 Leads — Upfin</h1>
-    <button id="exportCsv">⬇️ Exportar CSV</button>
-  </header>
+  <h1>Admin Upfin</h1>
+  <p>Visão geral dos leads captados</p>
+
+  <div class="card">
+    <span>Total de leads</span>
+    <strong id="total">0</strong>
+  </div>
 
   <table>
     <thead>
@@ -81,105 +76,52 @@
         <th>ID</th>
         <th>Nome</th>
         <th>E-mail</th>
+        <th>Data</th>
       </tr>
     </thead>
     <tbody id="leads"></tbody>
   </table>
 
-  <p id="erro" class="erro"></p>
-
   <script>
-    // ===============================
-    // CONFIG
-    // ===============================
     const API_URL =
       location.hostname === "localhost"
         ? "http://localhost:8080"
         : "https://upfin-backend-production.up.railway.app";
 
-    let LEADS = [];
-
-    // ===============================
-    // TOKEN ADMIN (NÃO FICA FIXO)
-    // ===============================
-    const token = prompt("🔐 Informe o ADMIN TOKEN:");
+    const token = prompt("🔐 Token admin:");
 
     if (!token) {
       document.body.innerHTML = "<h2>⛔ Acesso cancelado</h2>";
-      throw new Error("Sem token");
+      throw new Error();
     }
 
-    // ===============================
-    // BUSCAR LEADS
-    // ===============================
     fetch(`${API_URL}/leads`, {
-      headers: {
-        "X-ADMIN-TOKEN": token
-      }
+      headers: { "X-ADMIN-TOKEN": token }
     })
       .then(res => {
-        if (res.status === 401) {
+        if (!res.ok) {
           document.body.innerHTML = "<h2>⛔ Não autorizado</h2>";
-          throw new Error("Unauthorized");
+          throw new Error();
         }
         return res.json();
       })
       .then(data => {
-        LEADS = data;
+        document.getElementById("total").textContent = data.length;
+
         const tbody = document.getElementById("leads");
+        tbody.innerHTML = "";
 
-        if (!data.length) {
-          document.getElementById("erro").textContent =
-            "Nenhum lead cadastrado ainda.";
-          return;
-        }
-
-        data.forEach(lead => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${lead.id}</td>
-            <td>${lead.nome ?? "-"}</td>
-            <td>${lead.email}</td>
+        data.forEach(l => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${l.id}</td>
+              <td>${l.nome ?? "-"}</td>
+              <td>${l.email}</td>
+              <td>${new Date(l.createdAt).toLocaleDateString()}</td>
+            </tr>
           `;
-          tbody.appendChild(tr);
         });
-      })
-      .catch(err => {
-        document.getElementById("erro").textContent =
-          "Erro ao carregar leads.";
-        console.error(err);
       });
-
-    // ===============================
-    // EXPORTAR CSV
-    // ===============================
-    function exportarCSV() {
-      if (!LEADS.length) {
-        alert("Nenhum lead para exportar");
-        return;
-      }
-
-      const header = ["id", "nome", "email"];
-      const rows = LEADS.map(l =>
-        [l.id, l.nome ?? "", l.email].join(";")
-      );
-
-      const csv = [header.join(";"), ...rows].join("\n");
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "leads-upfin.csv";
-      link.click();
-
-      URL.revokeObjectURL(url);
-    }
-
-    document
-      .getElementById("exportCsv")
-      .addEventListener("click", exportarCSV);
   </script>
 
 </body>

@@ -6,15 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    body {
-      background: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      padding: 24px;
+    * {
+      box-sizing: border-box;
     }
 
-    h1 {
-      margin-bottom: 16px;
+    body {
+      margin: 0;
+      background: #0b0b0b;
+      color: #ffffff;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    header {
+      padding: 20px 32px;
+      border-bottom: 1px solid #1f1f1f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    main {
+      padding: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #121212;
+      border: 1px solid #1f1f1f;
+      border-radius: 12px;
+      padding: 24px;
     }
 
     table {
@@ -23,74 +49,113 @@
       margin-top: 16px;
     }
 
-    th, td {
-      border-bottom: 1px solid #222;
-      padding: 12px;
+    th {
       text-align: left;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: #9ca3af;
+      padding: 14px 12px;
+      border-bottom: 1px solid #222;
     }
 
-    th {
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #1f1f1f;
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background: #181818;
+    }
+
+    .empty {
+      text-align: center;
       color: #9ca3af;
-      font-size: 13px;
+      padding: 32px 0;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1f2937;
+      color: #93c5fd;
     }
   </style>
 </head>
 
 <body>
-  <h1>📋 Leads cadastrados</h1>
+  <header>
+    <h1>Admin • Upfin</h1>
+    <span class="badge">Leads</span>
+  </header>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>E-mail</th>
-      </tr>
-    </thead>
-    <tbody id="leads"></tbody>
-  </table>
+  <main>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+          </tr>
+        </thead>
+        <tbody id="leads">
+          <tr>
+            <td colspan="3" class="empty">Carregando leads…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
 
   <script>
-  const API_URL =
-    location.hostname === "localhost"
-      ? "http://localhost:8080"
-      : "https://upfin-backend-production.up.railway.app";
+    const API_URL =
+      location.hostname === "localhost"
+        ? "http://localhost:8080"
+        : "https://upfin-backend-production.up.railway.app";
 
-  const token = prompt("🔐 Token admin:");
+    const token = prompt("🔐 Token admin:");
 
-  if (!token) {
-    document.body.innerHTML = "<h2>⛔ Acesso cancelado</h2>";
-    throw new Error("Sem token");
-  }
-
-  fetch(`${API_URL}/leads`, {
-    headers: {
-      "X-ADMIN-TOKEN": token
+    if (!token) {
+      document.body.innerHTML = "<h2 style='padding:40px'>⛔ Acesso cancelado</h2>";
+      throw new Error("Sem token");
     }
-  })
-    .then(res => {
-      if (res.status === 401) {
-        document.body.innerHTML = "<h2>⛔ Não autorizado</h2>";
-        throw new Error("Unauthorized");
-      }
-      return res.json();
-    })
-    .then(data => {
-      const tbody = document.getElementById("leads");
 
-      data.forEach(lead => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${lead.id}</td>
-          <td>${lead.nome ?? "-"}</td>
-          <td>${lead.email}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    fetch(`${API_URL}/leads`, {
+      headers: {
+        "X-ADMIN-TOKEN": token
+      }
     })
-    .catch(() => {
-      alert("Erro ao carregar leads");
-    });
-</script>
+      .then(res => {
+        if (res.status === 401) {
+          document.body.innerHTML = "<h2 style='padding:40px'>⛔ Não autorizado</h2>";
+          throw new Error("Unauthorized");
+        }
+        return res.json();
+      })
+      .then(data => {
+        const tbody = document.getElementById("leads");
+        tbody.innerHTML = "";
+
+        if (data.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='3' class='empty'>Nenhum lead ainda</td></tr>";
+          return;
+        }
+
+        data.forEach(lead => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${lead.id}</td>
+            <td>${lead.nome ?? "-"}</td>
+            <td>${lead.email}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(() => {
+        alert("Erro ao carregar leads");
+      });
+  </script>
 </body>
 </html>
